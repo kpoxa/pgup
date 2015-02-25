@@ -1,0 +1,16 @@
+.eunit
+*.o
+*.sublime-workspace
+*.beam
+*.plt
+erl_crash.dump
+log/
+ebin/
+*~
+*#
+.#*
+_rel/
+*.bak
+deps/*
+console.log*
+error.log*
