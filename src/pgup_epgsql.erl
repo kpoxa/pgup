@@ -1,6 +1,9 @@
 -module(pgup_epgsql).
 -behaviour (pgup_db_behaviour).
--export([query/3, connect/1, init_db_schema/1, current_version/1, record_version/2, remove_version/2]).
+-export([query/3, connect/1, init_db_schema/1, current_version/1, record_version/2, remove_version/2, master_db/0, create_db/2]).
+
+master_db() ->
+	"postgres".
 
 connect(Cfg) -> 
 	Host = proplists:get_value(host, Cfg, "127.0.0.1"),
@@ -12,8 +15,17 @@ connect(Cfg) ->
 	Pid = connection_result(connect(Host, User, Db, Pass, Opts)),
 	{Cfg, Pid}.
 
+create_db( { _Cnf, Con }, Db ) ->
+	result(epgsql:equery(Con, "CREATE DATABASE " ++ to_string(Db))).
+
+to_string(Db) when is_atom(Db) -> atom_to_list(Db);
+to_string(Db) when is_binary(Db) -> binary_to_list(Db);
+to_string(Db) when is_list(Db) -> Db.
+
 connection_result({ok, Pid}) when is_pid(Pid) ->
 	Pid;
+connection_result(E = {error, {error, _, _Code, _Reason, _}}) ->
+	result(E);
 connection_result({error, invalid_password}) ->
 	pgup_log:msg("~s", [cake:fg(lightred, "Invalid password or username")]),
 	throw(invalid_password).
@@ -30,6 +42,9 @@ query({_Cnf, Con}, Query, Fun) when is_function(Fun, 0) ->
 
 result([]) -> 
 	ok;
+result({error, {error, _, Code, Reason, _}}) ->
+	pgup_log:msg("~s", [cake:fg(lightred, io_lib:format("Sql error ~s: ~s", [Code, Reason]))]),
+	throw(sql_error);
 result(ok) ->
 	ok;
 result([H|T]) ->
@@ -44,7 +59,7 @@ init_db_schema({_Cnf, Con}) ->
 init_schema_result({ok, [], []}) ->
 	ok;
 init_schema_result({error, {error, error, <<"42P07">>, Text, _}}) ->
-	pgup_log:msg("Schema already initialized (~s)", [binary_to_list(Text)]),
+	pgup_log:msg("Schema already initialized (~s)", [to_string(Text)]),
 	ok.	
 
 

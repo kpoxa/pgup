@@ -1,10 +1,18 @@
 -module(pgup_db).
--export([connect/1, query/3, init_db_schema/1, current_version/1, record_version/2, remove_version/2]).
+-export([connect/1, query/3, create_db/1, init_db_schema/1, current_version/1, record_version/2, remove_version/2]).
 
--define(ENGINES, [{pg, pgup_epgsql}]).
+-define(ENGINES, [{pg, pgup_epgsql}, {mysql, pgup_mysql}]).
 
 connect(Config) ->
 	run(Config, connect, [Config]).
+
+create_db(Config) ->
+	Db = proplists:get_value(db, Config),
+	Master = run(Config, master_db, []),
+	run(Config, create_db, [connect(change(Config, db, Master)), Db]).
+
+change(Proplist, Key, Value) ->
+	lists:keystore(Key, 1, Proplist, {Key, Value}).	
 
 init_db_schema(Config) ->
 	pgup_log:msg("Config = ~p", [Config]),
@@ -27,8 +35,7 @@ run(Config, F, A) ->
 	erlang:apply(Module, F, A).
 
 get_module(Config) ->
-	Engine = proplists:get_value(engine, Config, pg),
-	Module = proplists:get_value(Engine, ?ENGINES),
+	Module = proplists:get_value(proplists:get_value(engine, Config, pg), ?ENGINES),
 	Module.
 
 integer(I) when is_integer(I) ->

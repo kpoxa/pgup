@@ -3,6 +3,10 @@
 -type proplist() :: list( { atom(), term() } ).
 -type connection_info() :: { proplist(), any() }.
 
+-callback master_db( ) -> string().
+
+-callback create_db( connection_info(), string() ) -> ok | {error, Reason :: string() }.
+
 -callback connect( Config :: proplist() ) -> connection_info() | {error, Reason :: string()} | error.
 
 -callback query( connection_info(), Query :: string(), F :: fun() ) -> ok.
