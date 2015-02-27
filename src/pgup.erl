@@ -12,8 +12,8 @@ main(_) ->
 	Commands:
 		create					create database
 		init 					init schema
-		upgrade 				upgrade to latest database version
-		downgrade X 			downgrade to version X
+		upgrade					upgrade to latest database version
+		downgrade X				downgrade to version X
 "]).
 
 command(_, error) ->
