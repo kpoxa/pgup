@@ -16,12 +16,12 @@ execute_upgrades([H|T], C) ->
 execute_upgrade({Num, Sql}, C) ->
 	pgup_log:msg("	process update #~p...", [Num]),
 	ok = pgup_db:query(C, Sql, fun() -> ok = pgup_db:record_version(C, Num) end),
-	pgup_log:msg(" ...done"),
+	pgup_log:ok(" ...done"),
 	ok.
 
 current(C) ->
 	CurrentVersion = pgup_db:current_version(C),
-	pgup_log:msg("current database version: ~s", [cake:fg(lightgreen, integer_to_list(CurrentVersion))]),
+	pgup_log:ok("current database version: ~B", [CurrentVersion]),
 	CurrentVersion.
 
 downgrade(Config, ToVersion) ->
@@ -39,9 +39,9 @@ execute_downgrades([H|T], C) ->
 execute_downgrade({Num, Sql}, C) ->
 	pgup_log:msg("	process downgrade #~p...", [Num]),
 	ok = pgup_db:query(C, Sql, fun() -> ok = pgup_db:remove_version(C, Num) end),
-	pgup_log:msg(" ...done"),
+	pgup_log:ok(" ...done"),
 	ok.
 
 ok() ->
-	pgup_log:msg("~s", [cake:fg(lightgreen, "Everything ok")]),
+	pgup_log:ok("Everything ok"),
 	ok.

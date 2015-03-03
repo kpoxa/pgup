@@ -1,16 +1,21 @@
 -module(pgup_log).
 
--export([msg/2, msg/1]).
+-export([msg/2, msg/1, ok/2, ok/1, err/2, err/1]).
 
-msg(L) ->
-	msg(L, []).
+ok(Str) -> 
+	ok(Str, []).
 
-msg(List, Params) ->
-	case io_lib:printable_unicode_list(List) of 
-		true 	-> print([List], Params);
-		_ 		-> print(List, Params)
-	end.
+ok(Str, Params) when is_list(Params) ->
+	msg(cake:fg(lightgreen, io_lib:format(Str, Params))).
 
-print(List, Params) ->
-	Output = string:join(List, "~n"),
-	io:format(Output ++ "~n", Params).
+err(Str) -> 
+	err(Str, []).
+
+err(Str, Params) when is_list(Params) ->
+	msg(cake:fg(lightred, io_lib:format(Str, Params))).
+
+msg(Str) ->
+	msg(Str, []).
+
+msg(Str, Params) when is_list(Params) ->
+	io:format(Str ++ "~n", Params).

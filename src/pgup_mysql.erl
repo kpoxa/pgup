@@ -11,7 +11,7 @@ connect(Cfg) ->
 	Db	 = proplists:get_value(db, Cfg),
 	Pass = proplists:get_value(pass, Cfg, ""),
 	Opts = proplists:get_value(opts, Cfg, []),
-	pgup_log:msg(["Connecting to ~p with user ~p and db ~p..."], [Host, User, Db]),
+	pgup_log:msg("Connecting to ~p with user ~p and db ~p...", [Host, User, Db]),
 	Pid = connection_result(connect(Host, User, Db, Pass, Opts)),
 	{Cfg, Pid}.
 
@@ -22,11 +22,11 @@ create_db( {_Cnf, Con}, Db ) ->
 connection_result({ok, Pid}) when is_pid(Pid) ->
 	Pid;
 connection_result({error, {Code, _, Text}}) ->
-	pgup_log:msg("~s ~p", [cake:fg(lightred, reason_to_str(Text)), Code]),
+	pgup_log:err("~s ~p", [reason_to_str(Text), Code]),
 	throw(sql_error).
 	
 connect(_, _, undefined, _, _ ) ->
-	pgup_log:msg(["	Database name  (parameter \"db\") undefined in config file"]),
+	pgup_log:err("Database name  (parameter \"db\") undefined in config file"),
 	{error, undefined_db};
 connect(Host, User, Db, Pass, _Opts) ->
 	Params = [{host, Host}, {user, User}, {password, Pass}, {database, Db}],
@@ -39,10 +39,10 @@ query({_Cnf, Con}, Query, Fun) when is_function(Fun, 0) ->
 	Ret.
 
 result({aborted, Reason}) -> 
-	pgup_log:msg("~s", cake:fg(lightred, Reason)),
+	pgup_log:err(Reason),
 	{error, Reason};
 result({error, {_Num, _Code, Reason}}) ->
-	pgup_log:msg("SQL Error: ~s", [cake:fg(lightred, reason_to_str(Reason))]),
+	pgup_log:err("SQL Error: ~s", [reason_to_str(Reason)]),
 	{error, Reason};
 result(ok) -> ok;
 result({atomic, ok}) ->

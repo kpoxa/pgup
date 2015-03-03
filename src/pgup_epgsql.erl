@@ -11,7 +11,7 @@ connect(Cfg) ->
 	Db	 = proplists:get_value(db, Cfg),
 	Pass = proplists:get_value(pass, Cfg, ""),
 	Opts = proplists:get_value(opts, Cfg, []),
-	pgup_log:msg(["Connecting to ~p with user ~p and db ~p..."], [Host, User, Db]),
+	pgup_log:msg("Connecting to ~p with user ~p and db ~p...", [Host, User, Db]),
 	Pid = connection_result(connect(Host, User, Db, Pass, Opts)),
 	{Cfg, Pid}.
 
@@ -27,11 +27,11 @@ connection_result({ok, Pid}) when is_pid(Pid) ->
 connection_result(E = {error, {error, _, _Code, _Reason, _}}) ->
 	result(E);
 connection_result({error, invalid_password}) ->
-	pgup_log:msg("~s", [cake:fg(lightred, "Invalid password or username")]),
+	pgup_log:err("Invalid password or username"),
 	throw(invalid_password).
 	
 connect(_, _, undefined, _, _ ) ->
-	pgup_log:msg(["	Database name  (parameter \"db\") undefined in config file"]),
+	pgup_log:err("Database name  (parameter \"db\") undefined in config file"),
 	{error, undefined_db};
 connect(Host, User, Db, Pass, Opts) ->
 	epgsql:connect(Host, User, Pass, [ {database, Db} | Opts ] ).
@@ -43,7 +43,7 @@ query({_Cnf, Con}, Query, Fun) when is_function(Fun, 0) ->
 result([]) -> 
 	ok;
 result({error, {error, _, Code, Reason, _}}) ->
-	pgup_log:msg("~s", [cake:fg(lightred, io_lib:format("Sql error ~s: ~s", [Code, Reason]))]),
+	pgup_log:err("Sql error ~s: ~s", [Code, Reason]),
 	throw(sql_error);
 result(ok) ->
 	ok;
