@@ -54,8 +54,17 @@ integer(L) when is_list(L) ->
 read_config(E = {error, enoent}) ->
 	E;
 read_config({ok, [Config]}) ->
-	{ok, Config};
+	{ok, prepare_config(Config)};
 read_config(A) ->
 	pgup_log:err("Error reading config file: ~p", [A]),
 	{error, A}.
 
+prepare_config(List) ->
+	[ prepare_config_var(K) || K <- List ].
+
+prepare_config_var( {Key, { env, EnvVar }} ) ->
+	case os:getenv(EnvVar) of 
+		false -> throw({environment_variable_must_be_defined, EnvVar});
+		VarValue -> {Key, VarValue}
+	end;
+prepare_config_var( V = {_, _} ) -> V. 
